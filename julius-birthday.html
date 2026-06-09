@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Julius's Birthday Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #f5efe6;
+    --surface:   #fdf8f1;
+    --border:    #d9cbb8;
+    --muted:     #a89880;
+    --text:      #2e2318;
+    --accent:    #6b9e6b;
+    --accent-dk: #4a7a4a;
+    --gold:      #c8922a;
+    --locked-bg: #ede5d8;
+    --locked-border: #c4b49e;
+    --shadow:    0 2px 12px rgba(46,35,24,0.10);
+    --shadow-lg: 0 6px 28px rgba(46,35,24,0.14);
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Nunito Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+    transition: background 0.5s ease, color 0.5s ease;
+  }
+
+  body.bw-mode {
+    --bg:          #ffffff;
+    --surface:     #f5f5f5;
+    --border:      #cccccc;
+    --muted:       #888888;
+    --text:        #111111;
+    --accent:      #333333;
+    --accent-dk:   #111111;
+    --gold:        #222222;
+    --locked-bg:   #e8e8e8;
+    --locked-border: #bbbbbb;
+    --shadow:      0 2px 12px rgba(0,0,0,0.12);
+    --shadow-lg:   0 6px 28px rgba(0,0,0,0.18);
+  }
+  body.bw-mode .card.completed { background: #ebebeb; }
+  body.bw-mode .hint-box { background: #e0e0e0; color: #111; border-color: #555; }
+  body.bw-mode .progress-fill { background: #333; }
+  body.bw-mode .card-status.done { background: #333; }
+  body.bw-mode .final-box { background: #f0f0f0; border-color: #333; }
+  body.bw-mode .final-box h2 { color: #111; }
+  body.bw-mode .header-title span { color: #111; }
+  body.bw-mode .admin-trigger { background: #333; }
+
+  .header { text-align: center; padding: 48px 24px 32px; }
+  .header-eyebrow {
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+  .header-title {
+    font-family: 'Nunito', sans-serif; font-weight: 900;
+    font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.1; color: var(--text);
+  }
+  .header-title span { color: var(--gold); }
+  .header-sub {
+    margin-top: 12px; font-size: 15px; color: var(--muted);
+    max-width: 420px; margin-left: auto; margin-right: auto; line-height: 1.55;
+  }
+
+  .progress-wrap { max-width: 560px; margin: 0 auto 36px; padding: 0 24px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px;
+    color: var(--muted); margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .progress-track { height: 10px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), #8eca8e);
+    border-radius: 99px; transition: width 0.6s cubic-bezier(.4,0,.2,1); width: 0%;
+  }
+
+  .cards { max-width: 560px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
+  .card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px;
+    padding: 22px 22px 20px; box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, background 0.5s, border-color 0.5s; position: relative; overflow: hidden;
+  }
+  .card:not(.locked):hover { box-shadow: var(--shadow-lg); }
+  .card.locked { background: var(--locked-bg); border-color: var(--locked-border); box-shadow: none; }
+  .card.completed { border-color: var(--accent); background: #f2faf2; }
+
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .card-icon {
+    width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 22px; flex-shrink: 0; background: var(--bg); border: 1.5px solid var(--border);
+  }
+  .card.completed .card-icon { background: #e2f5e2; border-color: var(--accent); }
+  .card.locked .card-icon { background: var(--locked-border); border-color: transparent; filter: grayscale(1) opacity(0.5); }
+
+  .card-meta { flex: 1; }
+  .card-step {
+    font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+  }
+  .card.locked .card-step { color: var(--locked-border); }
+  .card-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 16px; margin-top: 1px; }
+  .card.locked .card-title { color: var(--locked-border); }
+
+  .card-status {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px;
+  }
+  .card-status.done { background: var(--accent); animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1) both; }
+  .card-status.pending { border: 2px dashed var(--border); }
+  .card-status.unknown { border: 2px dashed var(--locked-border); }
+
+  @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+  .card-body { font-size: 14.5px; line-height: 1.55; color: #4a3c2e; }
+  .card.locked .card-body { color: var(--locked-border); font-style: italic; font-size: 13.5px; }
+
+  .hint-box {
+    margin-top: 14px; padding: 12px 14px; background: #edf7ed; border: 1.5px solid var(--accent);
+    border-radius: 10px; font-size: 13.5px; font-family: 'Nunito', sans-serif; font-weight: 700;
+    color: var(--accent-dk); display: flex; align-items: flex-start; gap: 8px;
+    animation: fadeSlide 0.4s ease both;
+  }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .hint-emoji { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* status indicator */
+  .sync-dot {
+    position: fixed; top: 20px; right: 20px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ccc; z-index: 99;
+    transition: background 0.3s;
+  }
+  .sync-dot.connected { background: var(--accent); }
+  .sync-dot.error { background: #e74c3c; }
+
+  .fly-btn {
+    position: fixed; top: 16px; left: 16px;
+    width: 56px; height: 56px;
+    background: #f5efe6; border-radius: 50%;
+    border: none; cursor: pointer; padding: 0; z-index: 99;
+    transform-origin: center;
+    animation: flyHover 3s ease-in-out infinite;
+  }
+  .fly-btn img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .fly-btn:hover { animation: none; transform: scale(1.15) rotate(-8deg); }
+  @keyframes flyHover {
+    0%,100% { transform: translateY(0px) rotate(-3deg); }
+    30%      { transform: translateY(-5px) rotate(3deg); }
+    60%      { transform: translateY(-2px) rotate(-5deg); }
+  }
+  .fly-btn.squished { animation: squish 0.4s cubic-bezier(.36,.07,.19,.97) both !important; }
+  @keyframes squish {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(1.4, 0.5) rotate(10deg); }
+    50%  { transform: scale(0.8, 1.3) rotate(-6deg); }
+    75%  { transform: scale(1.1, 0.9); }
+    100% { transform: scale(1); }
+  }
+
+  .admin-trigger {
+    position: fixed; bottom: 20px; right: 20px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--text); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; box-shadow: var(--shadow-lg); transition: transform 0.15s; z-index: 100;
+  }
+  .admin-trigger:hover { transform: scale(1.08); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(46,35,24,0.45); z-index: 200;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 28px 24px 36px; width: 100%; max-width: 480px;
+    box-shadow: 0 -8px 40px rgba(46,35,24,0.18); animation: slideUp 0.25s ease both;
+  }
+  @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 18px; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .modal-input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-family: 'Nunito Sans', sans-serif; font-size: 15px; background: var(--bg);
+    color: var(--text); outline: none; margin-bottom: 16px; transition: border-color 0.15s;
+  }
+  .modal-input:focus { border-color: var(--gold); }
+  .modal-input.error { border-color: #c0392b; }
+  .modal-error { font-size: 13px; color: #c0392b; margin: -10px 0 12px; display: none; }
+  .modal-error.show { display: block; }
+
+  .admin-steps { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .admin-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg);
+  }
+  .admin-row-label { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 14px; }
+
+  .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 99px; cursor: pointer; transition: background 0.2s; }
+  .toggle input:checked + .toggle-track { background: var(--accent); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.2s; pointer-events: none; }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+  .modal-close {
+    margin-top: 20px; width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: var(--text); color: #fff; font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 15px; cursor: pointer; transition: opacity 0.15s;
+  }
+  .modal-close:hover { opacity: 0.85; }
+  .auth-gate { display: block; }
+  .admin-panel { display: none; }
+
+  .final-card { max-width: 560px; margin: 0 auto; padding: 0 24px; }
+  .final-box {
+    display: none; margin-top: 0; padding: 22px;
+    background: linear-gradient(135deg, #fffbf0, #fff8e7);
+    border: 2px solid var(--gold); border-radius: 16px;
+    text-align: center; box-shadow: var(--shadow-lg); animation: fadeSlide 0.5s ease both;
+  }
+  .final-box.show { display: block; }
+  .final-box .trophy { font-size: 40px; margin-bottom: 10px; }
+  .final-box h2 { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; color: var(--gold); margin-bottom: 8px; }
+  .final-box p { font-size: 15px; line-height: 1.55; color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">🎂 Birthday Quest</div>
+  <h1 class="header-title">Happy Birthday,<br><span>Julius!</span></h1>
+  <p class="header-sub">Complete all four challenges to unlock the location of your gift. Good luck — you'll need it.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Progress</span>
+    <span id="progress-text">0 / 4 complete</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card" id="card-0">
+    <div class="card-header">
+      <div class="card-icon">🎱</div>
+      <div class="card-meta">
+        <div class="card-step">Challenge 1</div>
+        <div class="card-title">Beat me in Pool</div>
+      </div>
+      <div class="card-status pending" id="status-0"></div>
+    </div>
+    <div class="card-body" id="body-0">Sink more balls than Theodor in a single game of pool. No rematches. No excuses.</div>
+    <div class="hint-box" id="hint-0" style="display:none">
+      <span class="hint-emoji">🔍</span>
+      <span id="hint-text-0"></span>
+    </div>
+  </div>
+
+  <div class="card locked" id="card-1">
+    <div class="card-header">
+      <div class="card-icon">🏸</div>
+      <div class="card-meta">
+        <div class="card-step">Challenge 2</div>
+        <div class="card-title">Beat me in Badminton</div>
+      </div>
+      <div class="card-status unknown" id="status-1"></div>
+    </div>
+    <div class="card-body" id="body-1">Complete Challenge 1 to unlock this one.</div>
+    <div class="hint-box" id="hint-1" style="display:none">
+      <span class="hint-emoji">🔍</span>
+      <span id="hint-text-1"></span>
+    </div>
+  </div>
+
+  <div class="card locked" id="card-2">
+    <div class="card-header">
+      <div class="card-icon">🎯</div>
+      <div class="card-meta">
+        <div class="card-step">Challenge 3</div>
+        <div class="card-title">Challenge 3</div>
+      </div>
+      <div class="card-status unknown" id="status-2"></div>
+    </div>
+    <div class="card-body" id="body-2">Complete Challenge 2 to unlock this one.</div>
+    <div class="hint-box" id="hint-2" style="display:none">
+      <span class="hint-emoji">🔍</span>
+      <span id="hint-text-2"></span>
+    </div>
+  </div>
+
+  <div class="card locked" id="card-3">
+    <div class="card-header">
+      <div class="card-icon">🏆</div>
+      <div class="card-meta">
+        <div class="card-step">Final Challenge</div>
+        <div class="card-title">Final Challenge</div>
+      </div>
+      <div class="card-status unknown" id="status-3"></div>
+    </div>
+    <div class="card-body" id="body-3">Complete Challenge 3 to unlock this one.</div>
+    <div class="hint-box" id="hint-3" style="display:none">
+      <span class="hint-emoji">🔍</span>
+      <span id="hint-text-3"></span>
+    </div>
+  </div>
+</div>
+
+<div class="final-card" style="margin-top:16px">
+  <div class="final-box" id="final-reveal">
+    <div class="trophy">🎁</div>
+    <h2>You found it!</h2>
+    <p id="final-text"></p>
+  </div>
+</div>
+
+<!-- Sync indicator -->
+<div class="sync-dot" id="sync-dot"></div>
+
+
+<!-- Admin trigger -->
+<button class="admin-trigger" id="admin-btn" title="Admin">🔑</button>
+
+<!-- Admin modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="auth-gate" id="auth-gate">
+      <div class="modal-title">Admin Access</div>
+      <div class="modal-sub">Enter the password to manage challenges.</div>
+      <input type="password" class="modal-input" id="pw-input" placeholder="Password" />
+      <div class="modal-error" id="pw-error">Wrong password. Try again.</div>
+      <button class="modal-close" id="pw-submit">Unlock</button>
+    </div>
+    <div class="admin-panel" id="admin-panel">
+      <div class="modal-title">Manage Challenges</div>
+      <div class="modal-sub">Toggle each challenge when Julius completes it.</div>
+      <div class="admin-steps">
+        <div class="admin-row">
+          <span class="admin-row-label">🎱 Challenge 1 — Pool</span>
+          <label class="toggle"><input type="checkbox" id="toggle-0" onchange="adminToggle(0)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="admin-row">
+          <span class="admin-row-label">🏸 Challenge 2 — Badminton</span>
+          <label class="toggle"><input type="checkbox" id="toggle-1" onchange="adminToggle(1)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="admin-row">
+          <span class="admin-row-label">🎯 Challenge 3</span>
+          <label class="toggle"><input type="checkbox" id="toggle-2" onchange="adminToggle(2)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="admin-row">
+          <span class="admin-row-label">🏆 Final Challenge</span>
+          <label class="toggle"><input type="checkbox" id="toggle-3" onchange="adminToggle(3)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+      <button class="modal-close" id="modal-close-btn" style="margin-top:20px">Done</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+// ── CONFIG ── Change these before the party!
+const ADMIN_PASSWORD = "theodor2025";
+const HINTS = [
+  "Hint 1: Fill this in before the party!",
+  "Hint 2: Fill this in before the party!",
+  "Hint 3: Fill this in before the party!",
+  "Final hint: This is where the gift is hidden!",
+];
+const FINAL_MESSAGE = "You conquered every challenge. Go check under the bed in Theodor's room — your gift is waiting! 🎁";
+// ── END CONFIG ──
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDc7JjC42ntmSR3i9ig8qWF1yprhl52Z9M",
+  authDomain: "julius-birthday-69c2b.firebaseapp.com",
+  projectId: "julius-birthday-69c2b",
+  storageBucket: "julius-birthday-69c2b.firebasestorage.app",
+  messagingSenderId: "366293617932",
+  appId: "1:366293617932:web:e5249a5866781380968d29",
+  databaseURL: "https://julius-birthday-69c2b-default-rtdb.europe-west1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const stateRef = ref(db, "challenges");
+const syncDot = document.getElementById("sync-dot");
+
+let completed = [false, false, false, false];
+let adminAuthed = false;
+
+// ── Listen for live updates from Firebase ──
+onValue(stateRef, (snapshot) => {
+  const data = snapshot.val();
+  if (data && Array.isArray(data)) {
+    completed = data;
+  } else {
+    completed = [false, false, false, false];
+  }
+  syncDot.className = "sync-dot connected";
+  renderAll();
+}, (error) => {
+  syncDot.className = "sync-dot error";
+});
+
+function saveState() {
+  set(stateRef, completed);
+}
+
+function renderAll() {
+  const count = completed.filter(Boolean).length;
+  document.getElementById("progress-text").textContent = `${count} / 4 complete`;
+  document.getElementById("progress-fill").style.width = `${(count / 4) * 100}%`;
+
+  for (let i = 0; i < 4; i++) {
+    const card = document.getElementById(`card-${i}`);
+    const statusEl = document.getElementById(`status-${i}`);
+    const hintEl = document.getElementById(`hint-${i}`);
+    const bodyEl = document.getElementById(`body-${i}`);
+    const hintText = document.getElementById(`hint-text-${i}`);
+    const isComplete = completed[i];
+    const isUnlocked = i === 0 || completed[i - 1];
+    hintText.textContent = HINTS[i];
+
+    if (isComplete) {
+      card.className = "card completed";
+      statusEl.className = "card-status done";
+      statusEl.textContent = "✓";
+      hintEl.style.display = "flex";
+      if (i === 0) bodyEl.textContent = "Pool champion. Proof that you've still got it.";
+      if (i === 1) bodyEl.textContent = "One game of badminton, one winner. You pulled it off.";
+    } else if (isUnlocked) {
+      card.className = "card";
+      statusEl.className = "card-status pending";
+      statusEl.textContent = "";
+      hintEl.style.display = "none";
+      if (i === 1) bodyEl.textContent = "Beat Theodor in a single game of badminton. Come on then.";
+      if (i === 2) bodyEl.textContent = "Complete Challenge 2 to unlock this one.";
+      if (i === 3) bodyEl.textContent = "Complete Challenge 3 to unlock this one.";
+    } else {
+      card.className = "card locked";
+      statusEl.className = "card-status unknown";
+      statusEl.textContent = "";
+      hintEl.style.display = "none";
+      if (i > 0) bodyEl.textContent = `Complete Challenge ${i} to unlock this one.`;
+    }
+  }
+
+  const finalReveal = document.getElementById("final-reveal");
+  if (completed.every(Boolean)) {
+    finalReveal.classList.add("show");
+    document.getElementById("final-text").textContent = FINAL_MESSAGE;
+  } else {
+    finalReveal.classList.remove("show");
+  }
+
+  if (adminAuthed) {
+    for (let i = 0; i < 4; i++) document.getElementById(`toggle-${i}`).checked = completed[i];
+  }
+}
+
+function adminToggle(i) {
+  if (i > 0 && !completed[i - 1]) { document.getElementById(`toggle-${i}`).checked = false; return; }
+  completed[i] = document.getElementById(`toggle-${i}`).checked;
+  if (!completed[i]) { for (let j = i + 1; j < 4; j++) completed[j] = false; }
+  saveState();
+}
+
+// ── Modal / auth ──
+const overlay = document.getElementById("modal-overlay");
+const pwInput = document.getElementById("pw-input");
+const pwError = document.getElementById("pw-error");
+const authGate = document.getElementById("auth-gate");
+const adminPanel = document.getElementById("admin-panel");
+
+document.getElementById("admin-btn").addEventListener("click", () => {
+  overlay.classList.add("open");
+  if (!adminAuthed) pwInput.focus();
+});
+overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+document.getElementById("modal-close-btn").addEventListener("click", closeModal);
+
+function closeModal() {
+  overlay.classList.remove("open");
+  pwInput.value = "";
+  pwError.classList.remove("show");
+  pwInput.classList.remove("error");
+}
+
+document.getElementById("pw-submit").addEventListener("click", tryAuth);
+pwInput.addEventListener("keydown", (e) => { if (e.key === "Enter") tryAuth(); });
+
+function tryAuth() {
+  if (pwInput.value === ADMIN_PASSWORD) {
+    adminAuthed = true;
+    authGate.style.display = "none";
+    adminPanel.style.display = "block";
+    pwError.classList.remove("show");
+    for (let i = 0; i < 4; i++) document.getElementById(`toggle-${i}`).checked = completed[i];
+  } else {
+    pwInput.classList.add("error");
+    pwError.classList.add("show");
+    pwInput.value = "";
+    pwInput.focus();
+  }
+}
+
+// ── Fly easter egg ──
+let bwMode = false;
+const flyBtn = document.getElementById("fly-btn");
+
+function playSquish() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const bufLen = ctx.sampleRate * 0.18;
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      const t = i / ctx.sampleRate;
+      const env = Math.exp(-t * 28);
+      data[i] = env * (Math.random() * 2 - 1) * 0.6
+              + env * Math.sin(2 * Math.PI * 80 * t) * 0.5
+              + env * Math.sin(2 * Math.PI * 180 * t * (1 - t * 4)) * 0.3;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 400;
+    src.connect(lp);
+    lp.connect(ctx.destination);
+    src.start();
+    setTimeout(() => ctx.close(), 400);
+  } catch(e) {}
+}
+
+flyBtn.addEventListener("click", () => {
+  bwMode = !bwMode;
+  document.body.classList.toggle("bw-mode", bwMode);
+  flyBtn.classList.remove("squished");
+  void flyBtn.offsetWidth;
+  flyBtn.classList.add("squished");
+  setTimeout(() => flyBtn.classList.remove("squished"), 420);
+  playSquish();
+});
+
+</script>
+</body>
+</html>
