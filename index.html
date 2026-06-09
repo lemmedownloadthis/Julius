@@ -239,8 +239,8 @@
 
 <div class="header">
   <div class="header-eyebrow">🎂 Birthday Quest</div>
-  <h1 class="header-title">Tillykke med dagen,<br><span>Julius!</span></h1>
-  <p class="header-sub">Klar alle mine fire challenges for at finde ud af lokationen på din gave. Held og lykke, Du får brug for det...</p>
+  <h1 class="header-title">Happy Birthday,<br><span>Julius!</span></h1>
+  <p class="header-sub">Complete all four challenges to unlock the location of your gift. Good luck — you'll need it.</p>
 </div>
 
 <div class="progress-wrap">
@@ -259,7 +259,7 @@
       <div class="card-icon">🎱</div>
       <div class="card-meta">
         <div class="card-step">Challenge 1</div>
-        <div class="card-title">Slå mig i et spil Pool</div>
+        <div class="card-title">Beat me in Pool</div>
       </div>
       <div class="card-status pending" id="status-0"></div>
     </div>
@@ -275,11 +275,11 @@
       <div class="card-icon">🏸</div>
       <div class="card-meta">
         <div class="card-step">Challenge 2</div>
-        <div class="card-title">Vind over mig i en badminton duel</div>
+        <div class="card-title">Beat me in Badminton</div>
       </div>
       <div class="card-status unknown" id="status-1"></div>
     </div>
-    <div class="card-body" id="body-1">Klar første Challenge for at unlocke den her.</div>
+    <div class="card-body" id="body-1">Complete Challenge 1 to unlock this one.</div>
     <div class="hint-box" id="hint-1" style="display:none">
       <span class="hint-emoji">🔍</span>
       <span id="hint-text-1"></span>
@@ -350,19 +350,19 @@
       <div class="admin-steps">
         <div class="admin-row">
           <span class="admin-row-label">🎱 Challenge 1 — Pool</span>
-          <label class="toggle"><input type="checkbox" id="toggle-0" onchange="adminToggle(0)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          <label class="toggle"><input type="checkbox" id="toggle-0"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
         <div class="admin-row">
           <span class="admin-row-label">🏸 Challenge 2 — Badminton</span>
-          <label class="toggle"><input type="checkbox" id="toggle-1" onchange="adminToggle(1)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          <label class="toggle"><input type="checkbox" id="toggle-1"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
         <div class="admin-row">
           <span class="admin-row-label">🎯 Challenge 3</span>
-          <label class="toggle"><input type="checkbox" id="toggle-2" onchange="adminToggle(2)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          <label class="toggle"><input type="checkbox" id="toggle-2"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
         <div class="admin-row">
           <span class="admin-row-label">🏆 Final Challenge</span>
-          <label class="toggle"><input type="checkbox" id="toggle-3" onchange="adminToggle(3)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          <label class="toggle"><input type="checkbox" id="toggle-3"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
       </div>
       <button class="modal-close" id="modal-close-btn" style="margin-top:20px">Done</button>
@@ -375,7 +375,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/fireba
 import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
 // ── CONFIG ── Change these before the party!
-const ADMIN_PASSWORD = "draftoutking";
+const ADMIN_PASSWORD = "theodor2025";
 const HINTS = [
   "Hint 1: Fill this in before the party!",
   "Hint 2: Fill this in before the party!",
@@ -480,6 +480,11 @@ function adminToggle(i) {
   saveState();
 }
 
+// Wire up toggle listeners inside the module
+for (let i = 0; i < 4; i++) {
+  document.getElementById(`toggle-${i}`).addEventListener("change", () => adminToggle(i));
+}
+
 // ── Modal / auth ──
 const overlay = document.getElementById("modal-overlay");
 const pwInput = document.getElementById("pw-input");
@@ -519,44 +524,7 @@ function tryAuth() {
   }
 }
 
-// ── Fly easter egg ──
-let bwMode = false;
-const flyBtn = document.getElementById("fly-btn");
 
-function playSquish() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const bufLen = ctx.sampleRate * 0.18;
-    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < bufLen; i++) {
-      const t = i / ctx.sampleRate;
-      const env = Math.exp(-t * 28);
-      data[i] = env * (Math.random() * 2 - 1) * 0.6
-              + env * Math.sin(2 * Math.PI * 80 * t) * 0.5
-              + env * Math.sin(2 * Math.PI * 180 * t * (1 - t * 4)) * 0.3;
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const lp = ctx.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.value = 400;
-    src.connect(lp);
-    lp.connect(ctx.destination);
-    src.start();
-    setTimeout(() => ctx.close(), 400);
-  } catch(e) {}
-}
-
-flyBtn.addEventListener("click", () => {
-  bwMode = !bwMode;
-  document.body.classList.toggle("bw-mode", bwMode);
-  flyBtn.classList.remove("squished");
-  void flyBtn.offsetWidth;
-  flyBtn.classList.add("squished");
-  setTimeout(() => flyBtn.classList.remove("squished"), 420);
-  playSquish();
-});
 
 </script>
 </body>
